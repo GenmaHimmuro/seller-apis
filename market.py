@@ -11,6 +11,21 @@ logger = logging.getLogger(__file__)
 
 
 def get_product_list(page, campaign_id, access_token):
+    """Получить список товаров магазина Яндекс-маркет.
+
+        Аргументы:
+            campaign_id (str): идентификатор кампании
+            page (str): токен страницы
+            access_token (str): токен продавца
+        Возвращает:
+            dict: значение из словаря с ключом "result"
+        Корректное исполнение функции:
+            принимает объекты формата str с именами page, campaign_id, access_token,
+            делает post-запрос по url, получает значение по ключу "result".
+        Неккоректное исполнение функции:
+            принимает объект иного формата или неверные значения аргументов,
+            при попытке сделать запрос выдаст ошибку requests.HTTPError
+        """
     endpoint_url = "https://api.partner.market.yandex.ru/"
     headers = {
         "Content-Type": "application/json",
@@ -30,6 +45,23 @@ def get_product_list(page, campaign_id, access_token):
 
 
 def update_stocks(stocks, campaign_id, access_token):
+    """Обновить остатки.
+
+        Аргументы:
+            campaign_id (str): идентификатор кампании
+            stocks (list): информация о товарах
+            access_token (str): токен продавца
+        Возвращает:
+            dict: словарь с остатками.
+        Корректное исполнение функции:
+            принимает объекты, формата str с именами campaign_id, access_token,
+            формата list с именем stocks
+            делает put-запрос по url, обновляет список остатков.
+        Неккоректное исполнение функции:
+            принимает объект иного формата или неверные значения аргументов,
+            при попытке сделать запрос выдаст ошибку requests.HTTPError или
+            при вызове response.json() выдаст json.JSONDecodeError
+    """
     endpoint_url = "https://api.partner.market.yandex.ru/"
     headers = {
         "Content-Type": "application/json",
@@ -46,6 +78,23 @@ def update_stocks(stocks, campaign_id, access_token):
 
 
 def update_price(prices, campaign_id, access_token):
+    """Обновить цены.
+
+            Аргументы:
+                campaign_id (str): идентификатор кампании
+                prices (list): список цен
+                access_token (str): токен продавца
+            Возвращает:
+                dict: словарь с остатками.
+            Корректное исполнение функции:
+                принимает объекты, формата str с именами campaign_id, access_token,
+                формата list с именем prices
+                делает post-запрос по url, отправляет список цен.
+            Неккоректное исполнение функции:
+                принимает объект иного формата или неверные значения аргументов,
+                при попытке сделать запрос выдаст ошибку requests.HTTPError или
+                при вызове response.json() выдаст json.JSONDecodeError
+        """
     endpoint_url = "https://api.partner.market.yandex.ru/"
     headers = {
         "Content-Type": "application/json",
@@ -62,7 +111,21 @@ def update_price(prices, campaign_id, access_token):
 
 
 def get_offer_ids(campaign_id, market_token):
-    """Получить артикулы товаров Яндекс маркета"""
+    """Получить артикулы товаров Яндекс маркета
+
+            Аргументы:
+                campaign_id (str): идентификатор кампании
+                market_token (str): токен магазина
+            Возвращает:
+                offer_ids (list) : список с артикулами
+            Корректное исполнение функции:
+                принимает объекты, формата str с именами campaign_id, market_token,
+                получает список артикулов offer_ids.
+            Неккоректное исполнение функции:
+                принимает объект иного формата или неверные значения аргументов в функции get_product_list,
+                при попытке сделать запрос выдаст ошибку requests.HTTPError или
+                при вызове response.json() выдаст json.JSONDecodeError
+        """
     page = ""
     product_list = []
     while True:
@@ -78,6 +141,25 @@ def get_offer_ids(campaign_id, market_token):
 
 
 def create_stocks(watch_remnants, offer_ids, warehouse_id):
+    """Получить остатки
+
+        Аргументы:
+            watch_remnants (dict) : словарь, с остатками часов;
+            offer_ids (list) : список артикулов;
+            warehouse_id (str) : идентификатор
+        Возвращает:
+            stocks (list) : список с остатками.
+        Корректное исполнение функции:
+            принимает объекты, формата dict с именем watch_remnants, формата list с именем offer_ids,
+            формата str с именем warehouse_id
+            сортирует остатки,
+            получает stocks с остатками.
+        Неккоректное исполнение функции:
+            принимает объект иного формата или неверные
+            значения аргументов в функции get_product_list,
+            при попытке сделать запрос выдаст ошибку requests.HTTPError или
+            при вызове response.json() выдаст json.JSONDecodeError
+    """
     # Уберем то, что не загружено в market
     stocks = list()
     date = str(datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z")
@@ -123,6 +205,22 @@ def create_stocks(watch_remnants, offer_ids, warehouse_id):
 
 
 def create_prices(watch_remnants, offer_ids):
+    """Составление цен на товары.
+
+        Аргументы:
+            watch_remnants (dict): остатки часов
+            offer_ids (list): список артикулов
+        Возвращает:
+            prices (list): список цен на товары.
+        Корректное исполнение функции:
+            принимает объекты, формата dict с именем watch_remnants, формата list с именем offer_ids,
+            получает prices с ценами.
+        Неккоректное исполнение функции:
+            принимает объект иного формата или неверные
+            значения аргументов в функциях get_product_list,
+            при попытке сделать запрос выдаст ошибку requests.HTTPError или
+            при вызове response.json() выдаст json.JSONDecodeError
+    """
     prices = []
     for watch in watch_remnants:
         if str(watch.get("Код")) in offer_ids:
@@ -143,6 +241,21 @@ def create_prices(watch_remnants, offer_ids):
 
 
 async def upload_prices(watch_remnants, campaign_id, market_token):
+    """Выгрузка цен товаров.
+
+        Аргументы:
+            watch_remnants (dict): остатки часов
+            campaign_id (str): идентификатор
+            market_token (str): токен магазина
+        Возвращает:
+            prices (list): cписок цен на товары
+        Корректное исполнение функции:
+            принимает объекты, формата str с именами campaign_id, market_token, формата dict с именем watch_remnants,
+            делает post-запрос по url функции update_price, получает list с ценами.
+        Неккоректное исполнение функции:
+            принимает объект иного формата или неверные значения аргументов в функции update_price,
+            при попытке сделать запрос выдаст ошибку requests.HTTPError
+        """
     offer_ids = get_offer_ids(campaign_id, market_token)
     prices = create_prices(watch_remnants, offer_ids)
     for some_prices in list(divide(prices, 500)):
@@ -151,6 +264,25 @@ async def upload_prices(watch_remnants, campaign_id, market_token):
 
 
 async def upload_stocks(watch_remnants, campaign_id, market_token, warehouse_id):
+    """Выгрузка остатков товаров.
+
+        Аргументы:
+            watch_remnants (dict): остатки часов
+            campaign_id (str): идентификатор
+            market_token (str): токен магазина
+            warehouse_id (str): идентификатор
+        Возвращает:
+            stocks (list): cписок остатков
+            not_empty (list) : список ?
+        Корректное исполнение функции:
+            принимает объекты, формата str с именами campaign_id, market_token, warehouse_id,
+            формата dict с именем watch_remnants,
+            делает post-запрос по url функции update_stocks, получает list с остатками.
+        Неккоректное исполнение функции:
+            принимает объект иного формата или неверные значения аргументов в функции update_stocks,
+            при попытке сделать запрос выдаст ошибку requests.HTTPError или
+            при вызове response.json() выдаст json.JSONDecodeError
+    """
     offer_ids = get_offer_ids(campaign_id, market_token)
     stocks = create_stocks(watch_remnants, offer_ids, warehouse_id)
     for some_stock in list(divide(stocks, 2000)):

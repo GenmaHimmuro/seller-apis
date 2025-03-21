@@ -12,7 +12,21 @@ logger = logging.getLogger(__file__)
 
 
 def get_product_list(last_id, client_id, seller_token):
-    """Получить список товаров магазина озон"""
+    """Получение списка товаров из интернет-магазина OZON.
+
+    Аргументы:
+        last_id (str) : строка, ?;
+        client_id (str) : строка, идентификатор клиента;
+        seller_token (str) : строка, токен продавца.
+    Возвращает:
+        dict: значение из словаря с ключом "result"
+    Корректное исполнение функции:
+        принимает объекты формата str с именами last_id, client_id, seller_token,
+        делает post-запрос по url, получает значение по ключу "result".
+    Неккоректное исполнение функции:
+        принимает объект иного формата или неверные значения аргументов,
+        при попытке сделать запрос выдаст ошибку requests.HTTPError
+    """
     url = "https://api-seller.ozon.ru/v2/product/list"
     headers = {
         "Client-Id": client_id,
@@ -32,7 +46,21 @@ def get_product_list(last_id, client_id, seller_token):
 
 
 def get_offer_ids(client_id, seller_token):
-    """Получить артикулы товаров магазина озон"""
+    """Получить артикулы товаров магазина озон
+
+    Аргументы:
+        client_id (str) : строка, идентификатор клиента;
+        seller_token (str) : строка, токен продавца.
+    Возвращает:
+        offer_ids (list) : список артикулов.
+    Корректное исполнение функции:
+        Получает список товаров из функции get_product_list,
+        из него получаем артикулы товаров.
+    Неккоректное исполнение функции:
+        принимает объект иного формата или неверные значения аргументов,
+        при попытке сделать запрос выдаст ошибку requests.HTTPError в get_product_list,
+        если передан объект None, метод extend() выбросит исключение TypeError
+    """
     last_id = ""
     product_list = []
     while True:
@@ -49,7 +77,22 @@ def get_offer_ids(client_id, seller_token):
 
 
 def update_price(prices: list, client_id, seller_token):
-    """Обновить цены товаров"""
+    """Обновить цены товаров
+
+    Аргументы:
+        prices (list) : список цен;
+        client_id (str) : строка, идентификатор клиента;
+        seller_token (str) : строка, токен продавца.
+    Возвращает:
+        dict : словарь, с обновленными ценами.
+    Корректное исполнение функции:
+        принимает объекты, формата str с именами client_id, seller_token, формата list с именем prices,
+        делает post-запрос по url, получает dict с обновленными ценами.
+    Неккоректное исполнение функции:
+        принимает объект иного формата или неверные значения аргументов,
+        при попытке сделать запрос выдаст ошибку requests.HTTPError или
+        при вызове response.json() выдаст json.JSONDecodeError
+    """
     url = "https://api-seller.ozon.ru/v1/product/import/prices"
     headers = {
         "Client-Id": client_id,
@@ -62,7 +105,22 @@ def update_price(prices: list, client_id, seller_token):
 
 
 def update_stocks(stocks: list, client_id, seller_token):
-    """Обновить остатки"""
+    """Обновить остатки
+
+    Аргументы:
+        stocks (list) : список остатков
+        client_id (str) : строка, идентификатор клиента
+        seller_token (str) : строка, токен продавца
+    Возвращает:
+        dict : словарь, с обновленными остатками.
+    Корректное исполнение функции:
+        принимает объекты, формата str с именами client_id, seller_token, формата list с именем stocks,
+        делает post-запрос по url, получает dict с обновленными остатками.
+    Неккоректное исполнение функции:
+        принимает объект иного формата или неверные значения аргументов,
+        при попытке сделать запрос выдаст ошибку requests.HTTPError или
+        при вызове response.json() выдаст json.JSONDecodeError
+    """
     url = "https://api-seller.ozon.ru/v1/product/import/stocks"
     headers = {
         "Client-Id": client_id,
@@ -75,7 +133,16 @@ def update_stocks(stocks: list, client_id, seller_token):
 
 
 def download_stock():
-    """Скачать файл ostatki с сайта casio"""
+    """Скачать файл ostatki с сайта casio
+
+    Возвращает:
+        dict : словарь, с остатками часов
+    Корректное исполнение функции:
+        делает get-запрос по url, получает из архива excel-файл с остатками и формирует список,
+        после удаляет excel-файл
+    Неккоректное исполнение функции:
+        ошибка со стороны сервера, при попытке сделать запрос выдаст ошибку requests.HTTPError
+    """
     # Скачать остатки с сайта
     casio_url = "https://timeworld.ru/upload/files/ostatki.zip"
     session = requests.Session()
@@ -96,6 +163,22 @@ def download_stock():
 
 
 def create_stocks(watch_remnants, offer_ids):
+    """Получить остатки
+
+        Аргументы:
+            watch_remnants (dict) : словарь, с остатками часов;
+            offer_ids (list) : список артикулов;
+        Возвращает:
+            stocks (list) : список с остатками.
+        Корректное исполнение функции:
+            принимает объекты, формата dict с именем watch_remnants, формата list с именем offer_ids,
+            сортирует остатки,
+            получает stocks с остатками.
+        Неккоректное исполнение функции:
+            принимает объект иного формата или неверные
+            значения аргументов в функциях get_product_list и download_stock,
+            при попытке сделать запрос выдаст ошибку requests.HTTPError
+        """
     # Уберем то, что не загружено в seller
     stocks = []
     for watch in watch_remnants:
@@ -116,6 +199,21 @@ def create_stocks(watch_remnants, offer_ids):
 
 
 def create_prices(watch_remnants, offer_ids):
+    """Составление цен на товары для Озона, которая равна цене магазина Casio.
+
+        Аргументы:
+            watch_remnants (dict): остатки часов
+            offer_ids (list): список артикулов
+        Возвращает:
+            prices (list): список цен на товары.
+        Корректное исполнение функции:
+            принимает объекты, формата dict с именем watch_remnants, формата list с именем offer_ids,
+            получает prices с ценами.
+        Неккоректное исполнение функции:
+            принимает объект иного формата или неверные
+            значения аргументов в функциях get_product_list и download_stock,
+            при попытке сделать запрос выдаст ошибку requests.HTTPError
+    """
     prices = []
     for watch in watch_remnants:
         if str(watch.get("Код")) in offer_ids:
@@ -131,17 +229,50 @@ def create_prices(watch_remnants, offer_ids):
 
 
 def price_conversion(price: str) -> str:
-    """Преобразовать цену. Пример: 5'990.00 руб. -> 5990"""
+    """Вспомогательная функция для преобразования строки для функции create_prices.
+
+    Аргументы:
+        price (str) : строка, вида "5'990.00 руб.";
+    Возвращает:
+        str: строка, вида "5990".
+    Корректное исполнение функции:
+        принимает объект формата str с именем price,
+        преобразовывает к другому виду и возвращает также str.
+    Неккоректное исполнение функции:
+        принимает объект иного формата, возникает ошибка AttributeError.
+    """
     return re.sub("[^0-9]", "", price.split(".")[0])
 
 
 def divide(lst: list, n: int):
-    """Разделить список lst на части по n элементов"""
+    """Вспомогательная функция для разделения списка lst на части по n элементов.
+
+    Аргументы:
+        list (str): список
+        n (int): количество элементов в одной части.
+    Возвращает:
+        list: Список состоящий из частей по n элементов.
+    """
     for i in range(0, len(lst), n):
         yield lst[i : i + n]
 
 
 async def upload_prices(watch_remnants, client_id, seller_token):
+    """Выгрузка цен товаров в магазине Озон.
+
+        Аргументы:
+            watch_remnants (dict): остатки часов
+            client_id (str): идентификатор клиента
+            seller_token (str): токен продавца
+        Возвращает:
+            list: cписок цен на товары
+        Корректное исполнение функции:
+            принимает объекты, формата str с именами client_id, seller_token, формата dict с именем watch_remnants,
+            делает post-запрос по url функции update_price, получает list с ценами.
+        Неккоректное исполнение функции:
+            принимает объект иного формата или неверные значения аргументов в функции update_price,
+            при попытке сделать запрос выдаст ошибку requests.HTTPError
+    """
     offer_ids = get_offer_ids(client_id, seller_token)
     prices = create_prices(watch_remnants, offer_ids)
     for some_price in list(divide(prices, 1000)):
@@ -150,6 +281,22 @@ async def upload_prices(watch_remnants, client_id, seller_token):
 
 
 async def upload_stocks(watch_remnants, client_id, seller_token):
+    """Выгрузка остатков товаров в магазине Озон.
+
+        Аргументы:
+            watch_remnants (dict): остатки часов
+            client_id (str): идентификатор клиента
+            seller_token (str): токен продавца
+        Возвращает:
+            stocks (list): cписок остатков
+            not_empty (list) : список ?
+        Корректное исполнение функции:
+            принимает объекты, формата str с именами client_id, seller_token, формата dict с именем watch_remnants,
+            делает post-запрос по url функции update_stocks, получает list с остатками.
+        Неккоректное исполнение функции:
+            принимает объект иного формата или неверные значения аргументов в функции update_stocks,
+            при попытке сделать запрос выдаст ошибку requests.HTTPError
+    """
     offer_ids = get_offer_ids(client_id, seller_token)
     stocks = create_stocks(watch_remnants, offer_ids)
     for some_stock in list(divide(stocks, 100)):
